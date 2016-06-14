@@ -22,6 +22,7 @@ const (
 	pump  = rpio.Pin(4) // relay 1
 	motor = rpio.Pin(3) // relay 2
 	// motorHigh = rpio.Pin(2) // relay 3
+	// extraRelay = rpio.Pin(17) // relay 4
 )
 
 func setRelay(pin rpio.Pin, b bool) {

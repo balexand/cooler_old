@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"log"
 	"time"
 
 	"github.com/stianeikeland/go-rpio"
@@ -11,85 +10,127 @@ import (
 // SwampCooler interface
 type SwampCooler interface {
 	Close()
+	GetMotor() bool
+	GetPump() bool
 	Open() error
 	ResetPins()
+	SetMotor(bool)
 	SetPump(bool)
 }
 
-// GPIOCooler implementation
-type gpioCooler struct {
+const (
+	pump  = rpio.Pin(4) // relay 1
+	motor = rpio.Pin(3) // relay 2
+	// motorHigh = rpio.Pin(2) // relay 3
+)
+
+func setRelay(pin rpio.Pin, b bool) {
+	if b {
+		pin.Low()
+	} else {
+		pin.High()
+	}
 }
 
-func (c gpioCooler) Close() {
-	fmt.Println("Closing...")
+type logCooler struct {
+	motor bool
+	pump  bool
 }
 
-func (c gpioCooler) Open() error {
-	fmt.Println("Opening...")
-	return rpio.Open()
+func (c logCooler) Close() {
+	log.Println("Closing...")
 }
 
-func (c gpioCooler) ResetPins() {
-	fmt.Println("Reseting Pins")
+func (c logCooler) GetMotor() bool {
+	return c.motor
 }
 
-func (c gpioCooler) SetPump(b bool) {
-
+func (c logCooler) GetPump() bool {
+	return c.pump
 }
 
-type mockCooler struct {
-	motor     bool
-	motorHigh bool
-	pump      bool
-}
-
-func (c mockCooler) Close() {
-	fmt.Println("Closing...")
-}
-
-func (c mockCooler) Open() error {
-	fmt.Println("Opening...")
+func (c logCooler) Open() error {
+	log.Println("Opening...")
 	return nil
 }
 
-func (c mockCooler) ResetPins() {
-	fmt.Println("Reseting Pins")
+func (c logCooler) ResetPins() {
+	log.Println("Reseting Pins...")
 }
 
-func (c mockCooler) SetPump(b bool) {
+func (c logCooler) SetMotor(b bool) {
 	c.motor = b
+	c.logState()
+}
+
+func (c logCooler) SetPump(b bool) {
 	c.pump = b
-	c.printState()
+	c.logState()
 }
 
-func (c mockCooler) printState() {
-	fmt.Printf("motor: %t, motorHigh: %t, pump: %t\n", c.motor, c.motorHigh, c.pump)
+func (c logCooler) logState() {
+	log.Printf("motor: %t, pump: %t\n", c.GetMotor(), c.GetPump())
 }
 
-const (
-	pump      = rpio.Pin(4) // relay 1
-	motor     = rpio.Pin(3) // relay 2
-	motorHigh = rpio.Pin(2) // relay 3
-)
+type gpioCooler struct {
+	log logCooler
+}
+
+func (c gpioCooler) Close() {
+	c.log.Close()
+
+	rpio.Close()
+}
+
+func (c gpioCooler) GetMotor() bool {
+	return c.log.motor
+}
+
+func (c gpioCooler) GetPump() bool {
+	return c.log.pump
+}
+
+func (c gpioCooler) Open() error {
+	c.log.Open()
+
+	if err := rpio.Open(); err != nil {
+		return err
+	}
+
+	pump.Output()
+	motor.Output()
+
+	return nil
+}
+
+func (c gpioCooler) ResetPins() {
+	c.log.ResetPins()
+
+	c.SetMotor(false)
+	c.SetPump(false)
+}
+
+func (c gpioCooler) SetMotor(b bool) {
+	c.log.SetMotor(b)
+
+	setRelay(motor, b)
+}
+
+func (c gpioCooler) SetPump(b bool) {
+	c.log.SetPump(b)
+
+	setRelay(pump, b)
+}
 
 func main() {
-	var cooler SwampCooler = mockCooler{}
+	var cooler SwampCooler = gpioCooler{}
+	// var cooler SwampCooler = logCooler{}
 
 	if err := cooler.Open(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	defer cooler.Close()
 
-	// Open and map memory to access gpio, check for errors
-
-	//
-	// defer rpio.Close()
-
-	// pump.Output()
-	// motor.Output()
-	// motorHigh.Output()
-	//
 	for x := 0; x < 3; x++ {
 		cooler.SetPump(true)
 		time.Sleep(time.Second)
@@ -98,8 +139,4 @@ func main() {
 	}
 
 	cooler.ResetPins()
-	//
-	// pump.High()
-	// motor.High()
-	// motorHigh.High()
 }

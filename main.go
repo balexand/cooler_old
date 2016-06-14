@@ -14,6 +14,8 @@ func main() {
 	}
 	defer cooler.Close()
 
+	cooler.ResetPins()
+
 	for x := 0; x < 3; x++ {
 		cooler.SetPump(true)
 		time.Sleep(time.Second)

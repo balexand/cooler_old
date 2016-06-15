@@ -18,10 +18,10 @@ type SwampCooler interface {
 }
 
 const (
-	pump  = rpio.Pin(4) // relay 1
-	motor = rpio.Pin(3) // relay 2
-	// motorHigh = rpio.Pin(2) // relay 3
-	// extraRelay = rpio.Pin(17) // relay 4
+	pump   = rpio.Pin(4)  // relay 1
+	extra1 = rpio.Pin(3)  // relay 2
+	extra2 = rpio.Pin(2)  // relay 3
+	motor  = rpio.Pin(17) // relay 4
 )
 
 func setRelay(pin rpio.Pin, b bool) {
@@ -106,8 +106,10 @@ func (c gpioCooler) Open() error {
 func (c gpioCooler) ResetPins() {
 	c.log.ResetPins()
 
-	c.SetMotor(false)
-	c.SetPump(false)
+	setRelay(pump, false)
+	setRelay(motor, false)
+	setRelay(extra1, false)
+	setRelay(extra2, false)
 }
 
 func (c gpioCooler) SetMotor(b bool) {

@@ -37,38 +37,38 @@ type logCooler struct {
 	pump  bool
 }
 
-func (c logCooler) Close() {
+func (c *logCooler) Close() {
 	log.Println("Closing...")
 }
 
-func (c logCooler) GetMotor() bool {
+func (c *logCooler) GetMotor() bool {
 	return c.motor
 }
 
-func (c logCooler) GetPump() bool {
+func (c *logCooler) GetPump() bool {
 	return c.pump
 }
 
-func (c logCooler) Open() error {
+func (c *logCooler) Open() error {
 	log.Println("Opening...")
 	return nil
 }
 
-func (c logCooler) ResetPins() {
+func (c *logCooler) ResetPins() {
 	log.Println("Reseting Pins...")
 }
 
-func (c logCooler) SetMotor(b bool) {
+func (c *logCooler) SetMotor(b bool) {
 	c.motor = b
 	c.logState()
 }
 
-func (c logCooler) SetPump(b bool) {
+func (c *logCooler) SetPump(b bool) {
 	c.pump = b
 	c.logState()
 }
 
-func (c logCooler) logState() {
+func (c *logCooler) logState() {
 	log.Printf("motor: %t, pump: %t\n", c.GetMotor(), c.GetPump())
 }
 
@@ -76,21 +76,21 @@ type gpioCooler struct {
 	log logCooler
 }
 
-func (c gpioCooler) Close() {
+func (c *gpioCooler) Close() {
 	c.log.Close()
 
 	rpio.Close()
 }
 
-func (c gpioCooler) GetMotor() bool {
+func (c *gpioCooler) GetMotor() bool {
 	return c.log.motor
 }
 
-func (c gpioCooler) GetPump() bool {
+func (c *gpioCooler) GetPump() bool {
 	return c.log.pump
 }
 
-func (c gpioCooler) Open() error {
+func (c *gpioCooler) Open() error {
 	c.log.Open()
 
 	if err := rpio.Open(); err != nil {
@@ -103,7 +103,7 @@ func (c gpioCooler) Open() error {
 	return nil
 }
 
-func (c gpioCooler) ResetPins() {
+func (c *gpioCooler) ResetPins() {
 	c.log.ResetPins()
 
 	setRelay(pump, false)
@@ -112,13 +112,13 @@ func (c gpioCooler) ResetPins() {
 	setRelay(extra2, false)
 }
 
-func (c gpioCooler) SetMotor(b bool) {
+func (c *gpioCooler) SetMotor(b bool) {
 	c.log.SetMotor(b)
 
 	setRelay(motor, b)
 }
 
-func (c gpioCooler) SetPump(b bool) {
+func (c *gpioCooler) SetPump(b bool) {
 	c.log.SetPump(b)
 
 	setRelay(pump, b)

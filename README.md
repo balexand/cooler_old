@@ -1,6 +1,6 @@
 # cooler
 
-Raspberry Pi swam cooler controller.
+Raspberry Pi swamp cooler controller.
 
 ## Hardware
 
